@@ -14,7 +14,14 @@ jobs:
       - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller
+          pip install pyinstaller pillow
+          brew install imagemagick
+          # Create icon directory if it doesn't exist
+          mkdir -p static
+          # Convert icon to proper format
+          if [ -f "static/icon.ico" ]; then
+            sips -s format icns static/icon.ico --out static/icon.icns || true
+          fi
       - run: python build_config.py
       - run: |
           brew install create-dmg
@@ -43,7 +50,7 @@ jobs:
       - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller
+          pip install pyinstaller pillow
       - run: python build_config.py
       - uses: actions/upload-artifact@v4
         with:
