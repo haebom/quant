@@ -1,33 +1,23 @@
+---
 name: Build and Release
-
 on:
   push:
     tags:
-      - 'v*'
-
+      - "v*"
 jobs:
   build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-          
-      - name: Install dependencies
-        run: |
+          python-version: "3.9"
+      - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
-          
-      - name: Build macOS app
-        run: |
-          python build_config.py
-          
-      - name: Create DMG
-        run: |
+      - run: python build_config.py
+      - run: |
           brew install create-dmg
           create-dmg \
             --volname "QuantAnalysis" \
@@ -39,9 +29,7 @@ jobs:
             --app-drop-link 600 185 \
             "QuantAnalysis.dmg" \
             "dist/QuantAnalysis.app"
-            
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: macos-build
           path: QuantAnalysis.dmg
@@ -50,23 +38,15 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-          
-      - name: Install dependencies
-        run: |
+          python-version: "3.9"
+      - run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
-          
-      - name: Build Windows exe
-        run: python build_config.py
-        
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+      - run: python build_config.py
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: dist/QuantAnalysis
@@ -75,11 +55,8 @@ jobs:
     needs: [build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - uses: actions/download-artifact@v4
+      - uses: softprops/action-gh-release@v1
         with:
           files: |
             macos-build/QuantAnalysis.dmg
