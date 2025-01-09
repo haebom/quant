@@ -1,0 +1,85 @@
+/* 전체 스타일 */
+body {
+    background-color: #f8f9fa;
+}
+
+/* 네비게이션 바 스타일 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* 카드 스타일 */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    border: none;
+    margin-bottom: 1.5rem;
+}
+
+.card-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* 폼 스타일 */
+.form-label {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 0.2rem rgba(74,144,226,.25);
+}
+
+/* 버튼 스타일 */
+.btn-primary {
+    background-color: #4a90e2;
+    border-color: #4a90e2;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.5rem;
+}
+
+.btn-primary:hover {
+    background-color: #357abd;
+    border-color: #357abd;
+}
+
+/* 결과 컨테이너 스타일 */
+#resultContainer, #performanceMetrics, #tradeHistory {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-family: monospace;
+}
+
+/* 차트 컨테이너 스타일 */
+#resultChart, #backtestChart {
+    height: 400px;
+    margin-bottom: 1.5rem;
+}
+
+/* 저장된 결과 스타일 */
+#savedResults {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    #resultChart, #backtestChart {
+        height: 300px;
+    }
+} 

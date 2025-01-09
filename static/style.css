@@ -1,0 +1,68 @@
+/* 기본 스타일 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+header {
+    padding: 20px;
+    background-color: #2a2a2a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1 {
+    margin: 0;
+}
+
+/* 언어 선택기 스타일 */
+.language-selector {
+    position: relative;
+}
+
+.language-selector select {
+    padding: 8px 12px;
+    font-size: 14px;
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    appearance: none;
+    padding-right: 30px;
+}
+
+.language-selector::after {
+    content: '▼';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #888;
+}
+
+.language-selector select:hover {
+    background-color: #444;
+}
+
+.language-selector select:focus {
+    outline: none;
+    border-color: #00ff88;
+}
+
+/* 메인 컨텐츠 영역 */
+main {
+    padding: 20px;
+}
+
+.analysis-section {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+} 

@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">Quant 모델 분석</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="quantForm">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="symbol" class="form-label">심볼</label>
+                                <input type="text" class="form-control" id="symbol" value="BTCUSDT" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="model" class="form-label">모델 선택</label>
+                                <select class="form-select" id="model" required>
+                                    <option value="mean_reversion">평균 회귀 전략</option>
+                                    <option value="momentum">모멘텀 전략</option>
+                                    <option value="factor_model">팩터 모델</option>
+                                    <option value="stat_arbitrage">통계적 차익거래</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3" id="paramContainer">
+                                <!-- 모델별 파라미터가 동적으로 추가됩니다 -->
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">분석 실행</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">분석 결과</h5>
+                <div id="resultChart"></div>
+                <div id="resultContainer" class="mt-3">
+                    <!-- 분석 결과가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const modelParams = {
+    'mean_reversion': [
+        { name: 'window', label: '이동평균 기간', type: 'number', default: 20 },
+        { name: 'std_dev', label: '표준편차 배수', type: 'number', default: 2 }
+    ],
+    'momentum': [
+        { name: 'lookback', label: '모멘텀 기간', type: 'number', default: 14 }
+    ],
+    'factor_model': [
+        { name: 'factors', label: '팩터', type: 'select', options: ['volume', 'volatility'], multiple: true }
+    ],
+    'stat_arbitrage': [
+        { name: 'window', label: '상관관계 기간', type: 'number', default: 30 }
+    ]
+};
+
+function updateParamInputs() {
+    const model = document.getElementById('model').value;
+    const container = document.getElementById('paramContainer');
+    container.innerHTML = '';
+
+    modelParams[model].forEach(param => {
+        const div = document.createElement('div');
+        div.className = 'mb-3';
+        
+        const label = document.createElement('label');
+        label.className = 'form-label';
+        label.htmlFor = param.name;
+        label.textContent = param.label;
+        
+        let input;
+        if (param.type === 'select' && param.multiple) {
+            input = document.createElement('select');
+            input.multiple = true;
+            param.options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                input.appendChild(option);
+            });
+        } else {
+            input = document.createElement('input');
+            input.type = param.type;
+            input.value = param.default || '';
+        }
+        
+        input.className = param.type === 'select' ? 'form-select' : 'form-control';
+        input.id = param.name;
+        input.name = param.name;
+        
+        div.appendChild(label);
+        div.appendChild(input);
+        container.appendChild(div);
+    });
+}
+
+document.getElementById('model').addEventListener('change', updateParamInputs);
+
+document.getElementById('quantForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const symbol = document.getElementById('symbol').value;
+    const model = document.getElementById('model').value;
+    const params = {};
+    
+    modelParams[model].forEach(param => {
+        const element = document.getElementById(param.name);
+        if (param.type === 'select' && param.multiple) {
+            params[param.name] = Array.from(element.selectedOptions).map(opt => opt.value);
+        } else {
+            params[param.name] = element.value;
+        }
+    });
+
+    try {
+        const response = await fetch('/api/quant-analysis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ symbol, model, params })
+        });
+
+        const result = await response.json();
+        
+        if (result.error) {
+            alert(result.error);
+            return;
+        }
+
+        // 결과 표시
+        const container = document.getElementById('resultContainer');
+        container.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+        
+        // 차트 그리기 (예시)
+        if (result.metrics) {
+            const chartData = [];
+            // 메트릭에 따라 적절한 차트 데이터 구성
+            Plotly.newPlot('resultChart', chartData);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('분석 중 오류가 발생했습니다.');
+    }
+});
+
+// 초기 파라미터 입력 필드 생성
+updateParamInputs();
+</script>
+{% endblock %} 

@@ -1,0 +1,483 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">백테스팅</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="backtestForm">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="symbol" class="form-label">심볼</label>
+                                <input type="text" class="form-control" id="symbol" value="BTCUSDT" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="model" class="form-label">모델 선택</label>
+                                <select class="form-select" id="model" required>
+                                    <option value="mean_reversion">평균 회귀 전략</option>
+                                    <option value="momentum">모멘텀 전략</option>
+                                    <option value="factor_model">팩터 모델</option>
+                                    <option value="stat_arbitrage">통계적 차익거래</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3" id="paramContainer">
+                                <!-- 모델별 파라미터가 동적으로 추가됩니다 -->
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">백테스트 실행</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">백테스트 결과</h5>
+                <div id="backtestChart"></div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h6>성과 지표</h6>
+                        <div id="performanceMetrics">
+                            <!-- 성과 지표가 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>거래 기록</h6>
+                        <div id="tradeHistory">
+                            <!-- 거래 기록이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">저장된 백테스트 결과</h5>
+                    <div>
+                        <button class="btn btn-primary me-2" id="compareButton" disabled>선택 결과 비교</button>
+                        <button class="btn btn-success" id="reportButton" disabled>리포트 생성</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll"></th>
+                                <th>날짜</th>
+                                <th>심볼</th>
+                                <th>모델</th>
+                                <th>파라미터</th>
+                                <th>작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="savedResultsTable">
+                            <!-- 저장된 결과가 여기에 표시됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 비교 모달 -->
+        <div class="modal fade" id="compareModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">백테스트 결과 비교</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="compareChart"></div>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>모델</th>
+                                        <th>파라미터</th>
+                                        <th>수익률</th>
+                                        <th>승률</th>
+                                        <th>최대 낙폭</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="compareTable">
+                                    <!-- 비교 결과가 여기에 표시됩니다 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 리포트 모달 -->
+        <div class="modal fade" id="reportModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">리포트 생성</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="reportForm">
+                            <div class="mb-3">
+                                <label for="reportLang" class="form-label">언어 선택</label>
+                                <select class="form-select" id="reportLang">
+                                    <option value="ko">한국어</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                        </form>
+                        <div id="reportLinks" class="d-none">
+                            <p>리포트가 생성되었습니다:</p>
+                            <div class="list-group">
+                                <a href="#" class="list-group-item list-group-item-action" id="htmlReportLink" target="_blank">
+                                    HTML 리포트 보기
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action" id="pdfReportLink" target="_blank">
+                                    PDF 리포트 다운로드
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        <button type="button" class="btn btn-primary" id="generateReportButton">리포트 생성</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const modelParams = {
+    'mean_reversion': [
+        { name: 'window', label: '이동평균 기간', type: 'number', default: 20 },
+        { name: 'std_dev', label: '표준편차 배수', type: 'number', default: 2 }
+    ],
+    'momentum': [
+        { name: 'lookback', label: '모멘텀 기간', type: 'number', default: 14 }
+    ],
+    'factor_model': [
+        { name: 'factors', label: '팩터', type: 'select', options: ['volume', 'volatility'], multiple: true }
+    ],
+    'stat_arbitrage': [
+        { name: 'window', label: '상관관계 기간', type: 'number', default: 30 }
+    ]
+};
+
+// 저장된 결과 로드
+async function loadSavedResults() {
+    try {
+        const response = await fetch('/api/backtest/list');
+        const results = await response.json();
+        
+        if (results.error) {
+            alert(results.error);
+            return;
+        }
+
+        const tbody = document.getElementById('savedResultsTable');
+        tbody.innerHTML = '';
+        
+        results.forEach(result => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="checkbox" class="result-checkbox" value="${result.filename}"></td>
+                <td>${formatDate(result.timestamp)}</td>
+                <td>${result.symbol}</td>
+                <td>${result.model}</td>
+                <td><pre class="mb-0 small">${JSON.stringify(result.params, null, 2)}</pre></td>
+                <td>
+                    <button class="btn btn-sm btn-success generate-report" data-filename="${result.filename}">
+                        리포트
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        // 체크박스 이벤트 리스너 추가
+        updateCheckboxListeners();
+        // 리포트 버튼 이벤트 리스너 추가
+        updateReportButtonListeners();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('저장된 결과를 불러오는데 실패했습니다.');
+    }
+}
+
+function formatDate(timestamp) {
+    if (!timestamp) return 'N/A';
+    const date = new Date(timestamp.replace(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/, '$1-$2-$3T$4:$5:$6'));
+    return date.toLocaleString();
+}
+
+function updateCheckboxListeners() {
+    const checkboxes = document.querySelectorAll('.result-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    const compareButton = document.getElementById('compareButton');
+    const reportButton = document.getElementById('reportButton');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const checkedCount = document.querySelectorAll('.result-checkbox:checked').length;
+            compareButton.disabled = checkedCount < 2;
+            reportButton.disabled = checkedCount !== 1;
+            selectAll.checked = checkedCount === checkboxes.length;
+        });
+    });
+    
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        compareButton.disabled = !selectAll.checked || checkboxes.length < 2;
+        reportButton.disabled = true;
+    });
+}
+
+function updateReportButtonListeners() {
+    // 개별 리포트 버튼
+    document.querySelectorAll('.generate-report').forEach(button => {
+        button.addEventListener('click', () => {
+            const filename = button.dataset.filename;
+            showReportModal(filename);
+        });
+    });
+    
+    // 선택된 결과 리포트 버튼
+    document.getElementById('reportButton').addEventListener('click', () => {
+        const selected = document.querySelector('.result-checkbox:checked');
+        if (selected) {
+            showReportModal(selected.value);
+        }
+    });
+}
+
+function showReportModal(filename) {
+    const modal = new bootstrap.Modal(document.getElementById('reportModal'));
+    const generateButton = document.getElementById('generateReportButton');
+    const reportLinks = document.getElementById('reportLinks');
+    
+    // 모달 초기화
+    reportLinks.classList.add('d-none');
+    generateButton.disabled = false;
+    
+    // 리포트 생성 버튼 이벤트
+    generateButton.onclick = async () => {
+        generateButton.disabled = true;
+        const lang = document.getElementById('reportLang').value;
+        
+        try {
+            const response = await fetch('/api/backtest/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ filename, lang })
+            });
+
+            const result = await response.json();
+            
+            if (result.error) {
+                alert(result.error);
+                return;
+            }
+
+            // 리포트 링크 업데이트
+            document.getElementById('htmlReportLink').href = `/reports/${result.html_report}`;
+            document.getElementById('pdfReportLink').href = `/reports/${result.pdf_report}`;
+            reportLinks.classList.remove('d-none');
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('리포트 생성 중 오류가 발생했습니다.');
+        } finally {
+            generateButton.disabled = false;
+        }
+    };
+    
+    modal.show();
+}
+
+// 비교 버튼 클릭 이벤트
+document.getElementById('compareButton').addEventListener('click', async () => {
+    const selectedFiles = Array.from(document.querySelectorAll('.result-checkbox:checked'))
+        .map(cb => cb.value);
+    
+    try {
+        const response = await fetch('/api/backtest/compare', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ filenames: selectedFiles })
+        });
+
+        const results = await response.json();
+        
+        if (results.error) {
+            alert(results.error);
+            return;
+        }
+
+        // 비교 차트 그리기
+        const chartData = results.map(result => ({
+            name: `${result.model} (${result.symbol})`,
+            // 실제 데이터에 맞게 수정 필요
+            data: result.result.metrics
+        }));
+        
+        Plotly.newPlot('compareChart', chartData);
+
+        // 비교 테이블 업데이트
+        const tbody = document.getElementById('compareTable');
+        tbody.innerHTML = results.map(result => `
+            <tr>
+                <td>${result.model}</td>
+                <td><pre class="mb-0 small">${JSON.stringify(result.params, null, 2)}</pre></td>
+                <td>${calculateReturns(result.result)}%</td>
+                <td>${calculateWinRate(result.result)}%</td>
+                <td>${calculateMaxDrawdown(result.result)}%</td>
+            </tr>
+        `).join('');
+
+        // 모달 표시
+        new bootstrap.Modal(document.getElementById('compareModal')).show();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('결과 비교 중 오류가 발생했습니다.');
+    }
+});
+
+// 성과 지표 계산 함수들
+function calculateReturns(result) {
+    // 수익률 계산 로직 구현
+    return 0;
+}
+
+function calculateWinRate(result) {
+    // 승률 계산 로직 구현
+    return 0;
+}
+
+function calculateMaxDrawdown(result) {
+    // 최대 낙폭 계산 로직 구현
+    return 0;
+}
+
+function updateParamInputs() {
+    const model = document.getElementById('model').value;
+    const container = document.getElementById('paramContainer');
+    container.innerHTML = '';
+
+    modelParams[model].forEach(param => {
+        const div = document.createElement('div');
+        div.className = 'mb-3';
+        
+        const label = document.createElement('label');
+        label.className = 'form-label';
+        label.htmlFor = param.name;
+        label.textContent = param.label;
+        
+        let input;
+        if (param.type === 'select' && param.multiple) {
+            input = document.createElement('select');
+            input.multiple = true;
+            param.options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                input.appendChild(option);
+            });
+        } else {
+            input = document.createElement('input');
+            input.type = param.type;
+            input.value = param.default || '';
+        }
+        
+        input.className = param.type === 'select' ? 'form-select' : 'form-control';
+        input.id = param.name;
+        input.name = param.name;
+        
+        div.appendChild(label);
+        div.appendChild(input);
+        container.appendChild(div);
+    });
+}
+
+document.getElementById('model').addEventListener('change', updateParamInputs);
+
+document.getElementById('backtestForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const symbol = document.getElementById('symbol').value;
+    const model = document.getElementById('model').value;
+    const params = {};
+    
+    modelParams[model].forEach(param => {
+        const element = document.getElementById(param.name);
+        if (param.type === 'select' && param.multiple) {
+            params[param.name] = Array.from(element.selectedOptions).map(opt => opt.value);
+        } else {
+            params[param.name] = element.value;
+        }
+    });
+
+    try {
+        const response = await fetch('/api/backtest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ symbol, model, params })
+        });
+
+        const result = await response.json();
+        
+        if (result.error) {
+            alert(result.error);
+            return;
+        }
+
+        // 차트 그리기
+        if (result.result.metrics) {
+            const chartData = [];
+            // 메트릭에 따라 적절한 차트 데이터 구성
+            Plotly.newPlot('backtestChart', chartData);
+        }
+
+        // 성과 지표 표시
+        const metricsContainer = document.getElementById('performanceMetrics');
+        metricsContainer.innerHTML = `<pre>${JSON.stringify(result.result.metrics, null, 2)}</pre>`;
+
+        // 거래 기록 표시
+        const historyContainer = document.getElementById('tradeHistory');
+        if (result.result.signals) {
+            historyContainer.innerHTML = `<pre>${JSON.stringify(result.result.signals, null, 2)}</pre>`;
+        }
+
+        // 저장된 결과 목록 새로고침
+        loadSavedResults();
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('백테스트 중 오류가 발생했습니다.');
+    }
+});
+
+// 초기화
+updateParamInputs();
+loadSavedResults();
+</script>
+{% endblock %} 
