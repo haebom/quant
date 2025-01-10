@@ -27,6 +27,10 @@ if __name__ == '__main__':
         '--hidden-import=numpy',
         '--hidden-import=scipy',
         '--hidden-import=sklearn',  # scikit-learn 대신 sklearn 사용
+        '--hidden-import=flask',
+        '--hidden-import=werkzeug',
+        '--collect-all=flask',
+        '--collect-all=werkzeug',
         '--clean',  # 빌드 전 캐시 정리
         '--noconfirm',  # 기존 빌드 디렉토리 자동 삭제
     ]
@@ -37,8 +41,12 @@ if __name__ == '__main__':
         if os.path.exists(icon_path):
             opts.extend(['--icon', icon_path])
         opts.extend([
-            '--target-arch=arm64',  # M1/M2 Mac용 설정
-            '--codesign-identity=-',  # 코드사이닝 비활성화
+            '--target-arch=universal2',  # Universal binary (Intel + Apple Silicon)
+            '--codesign-identity=',  # 자동 코드사이닝
+            '--osx-bundle-identifier=com.haebom.quantanalysis',
+            '--debug=imports',
+            '--collect-binaries=_ssl',  # SSL 모듈 포함
+            '--collect-binaries=_socket',  # Socket 모듈 포함
         ])
     elif sys.platform == 'win32':  # Windows
         icon_path = os.path.join('static', 'icon.ico')
