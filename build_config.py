@@ -1,5 +1,6 @@
 import sys
 import os
+import platform
 from PyInstaller.__main__ import run
 
 if __name__ == '__main__':
@@ -25,6 +26,7 @@ if __name__ == '__main__':
         # Core Dependencies
         '--hidden-import=flask',
         '--hidden-import=werkzeug',
+        '--hidden-import=markupsafe',
         '--collect-all=flask',
         '--collect-all=werkzeug',
         # Data Processing & Analysis
@@ -56,19 +58,28 @@ if __name__ == '__main__':
         icon_path = os.path.join('static', 'icon.icns')
         if os.path.exists(icon_path):
             opts.extend(['--icon', icon_path])
+            
+        # Check if running on Apple Silicon
+        is_arm = platform.machine() == 'arm64'
+        
         opts.extend([
-            '--target-arch=arm64',  # Apple Silicon 전용으로 변경
+            f'--target-arch={"arm64" if is_arm else "x86_64"}',  # 현재 아키텍처에 맞게 설정
             '--codesign-identity=',  # 자동 코드사이닝
             '--osx-bundle-identifier=com.haebom.quantanalysis',
             '--debug=imports',
-            '--collect-binaries=_ssl',  # SSL 모듈 포함
-            '--collect-binaries=_socket',  # Socket 모듈 포함
             '--exclude-module=tkinter',  # 불필요한 모듈 제외
             '--exclude-module=_tkinter',
             '--exclude-module=Tkinter',
             '--exclude-module=tcl',
             '--exclude-module=tk',
         ])
+        
+        # Add runtime hooks for SSL/Socket only if needed
+        if is_arm:
+            opts.extend([
+                '--runtime-hook=macos_runtime_hook.py',
+            ])
+            
     elif sys.platform == 'win32':  # Windows
         icon_path = os.path.join('static', 'icon.ico')
         if os.path.exists(icon_path):
