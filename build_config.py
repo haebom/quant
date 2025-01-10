@@ -22,15 +22,31 @@ if __name__ == '__main__':
         '--windowed',  # GUI 모드 (콘솔 창 숨김)
         f'--add-data=templates{separator}templates',  # 템플릿 디렉토리 포함
         f'--add-data=static{separator}static',  # 정적 파일 디렉토리 포함
-        '--hidden-import=plotly',
-        '--hidden-import=pandas',
-        '--hidden-import=numpy',
-        '--hidden-import=scipy',
-        '--hidden-import=sklearn',  # scikit-learn 대신 sklearn 사용
+        # Core Dependencies
         '--hidden-import=flask',
         '--hidden-import=werkzeug',
         '--collect-all=flask',
         '--collect-all=werkzeug',
+        # Data Processing & Analysis
+        '--hidden-import=pandas',
+        '--hidden-import=numpy',
+        '--hidden-import=scipy',
+        '--hidden-import=sklearn',
+        '--collect-all=pandas',
+        '--collect-all=numpy',
+        # Technical Analysis
+        '--hidden-import=ta',
+        '--collect-all=ta',
+        # Visualization
+        '--hidden-import=plotly',
+        '--collect-all=plotly',
+        # Utilities
+        '--hidden-import=python_binance',
+        '--hidden-import=websocket',
+        '--hidden-import=requests',
+        '--hidden-import=dotenv',
+        '--collect-all=python_binance',
+        # Build options
         '--clean',  # 빌드 전 캐시 정리
         '--noconfirm',  # 기존 빌드 디렉토리 자동 삭제
     ]
@@ -41,12 +57,17 @@ if __name__ == '__main__':
         if os.path.exists(icon_path):
             opts.extend(['--icon', icon_path])
         opts.extend([
-            '--target-arch=universal2',  # Universal binary (Intel + Apple Silicon)
+            '--target-arch=arm64',  # Apple Silicon 전용으로 변경
             '--codesign-identity=',  # 자동 코드사이닝
             '--osx-bundle-identifier=com.haebom.quantanalysis',
             '--debug=imports',
             '--collect-binaries=_ssl',  # SSL 모듈 포함
             '--collect-binaries=_socket',  # Socket 모듈 포함
+            '--exclude-module=tkinter',  # 불필요한 모듈 제외
+            '--exclude-module=_tkinter',
+            '--exclude-module=Tkinter',
+            '--exclude-module=tcl',
+            '--exclude-module=tk',
         ])
     elif sys.platform == 'win32':  # Windows
         icon_path = os.path.join('static', 'icon.ico')
