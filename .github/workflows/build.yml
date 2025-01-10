@@ -27,18 +27,22 @@ jobs:
           python build_config.py
           
       - name: Debug build output
+        shell: pwsh
         run: |
-          dir dist /s /b
+          Get-ChildItem -Path dist -Recurse | ForEach-Object {
+            Write-Output $_.FullName
+          }
           
       - name: Create Windows archive
+        shell: pwsh
         run: |
-          cd dist
-          if exist QuantAnalysis.exe (
+          Set-Location dist
+          if (Test-Path QuantAnalysis.exe) {
             Compress-Archive -Path QuantAnalysis.exe -DestinationPath ..\QuantAnalysis-Windows.zip -Force
-          ) else (
-            echo "Error: QuantAnalysis.exe not found"
+          } else {
+            Write-Error "Error: QuantAnalysis.exe not found"
             exit 1
-          )
+          }
           
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3
