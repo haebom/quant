@@ -3,111 +3,101 @@ name: Build and Release
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
 
 jobs:
-  build-macos:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller pillow
-          brew install imagemagick
-          mkdir -p static
-          if [ -f "static/icon.ico" ]; then
-            sips -s format icns static/icon.ico --out static/icon.icns || true
-          fi
-      - name: Build application
-        run: |
-          # Debug information
-          python -c "import sys; print(f'Python version: {sys.version}')"
-          python -c "import platform; print(f'Platform: {platform.platform()}')"
-          python build_config.py
-      - name: Fix permissions and sign
-        run: |
-          # Remove quarantine attribute and fix permissions
-          sudo xattr -rd com.apple.quarantine dist/QuantAnalysis.app || true
-          sudo chmod -R 755 dist/QuantAnalysis.app
-          
-          # Create temporary keychain
-          security create-keychain -p github_actions build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p github_actions build.keychain
-          
-          # Sign the app and its contents
-          find dist/QuantAnalysis.app -name "*.so" -o -name "*.dylib" -o -name "Python" | while read file; do
-            codesign --force --sign - --timestamp --options runtime --entitlements entitlements.plist "$file" || true
-          done
-          codesign --force --sign - --timestamp --options runtime --entitlements entitlements.plist dist/QuantAnalysis.app
-      - name: Create DMG
-        run: |
-          brew install create-dmg
-          create-dmg \
-            --volname "QuantAnalysis" \
-            --window-pos 200 120 \
-            --window-size 800 400 \
-            --icon-size 100 \
-            --icon "QuantAnalysis.app" 200 190 \
-            --hide-extension "QuantAnalysis.app" \
-            --app-drop-link 600 185 \
-            "QuantAnalysis.dmg" \
-            "dist/QuantAnalysis.app"
-      - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-build
-          path: |
-            QuantAnalysis.dmg
-            dist/QuantAnalysis.app/Contents/MacOS/QuantAnalysis.log
-          if-no-files-found: error
-
   build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: '3.9'
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pyinstaller pillow
-      - name: Build application
-        run: python build_config.py
-      - name: Create ZIP archive
+          pip install pyinstaller
+          
+      - name: Build Windows executable
+        run: |
+          python build_config.py
+          
+      - name: Debug build output
+        run: |
+          dir dist /s /b
+          
+      - name: Create Windows archive
         run: |
           cd dist
-          Compress-Archive -Path QuantAnalysis -DestinationPath ..\QuantAnalysis-Windows.zip
+          if exist QuantAnalysis.exe (
+            Compress-Archive -Path QuantAnalysis.exe -DestinationPath ..\QuantAnalysis-Windows.zip -Force
+          ) else (
+            echo "Error: QuantAnalysis.exe not found"
+            exit 1
+          )
+          
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: windows-build
+          name: QuantAnalysis-Windows
           path: QuantAnalysis-Windows.zip
-          if-no-files-found: error
-
+          
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+          
+      - name: Build macOS app
+        run: |
+          python build_config.py
+          
+      - name: Create DMG
+        run: |
+          cd dist
+          if [ -d "QuantAnalysis.app" ]; then
+            hdiutil create -volname "QuantAnalysis" -srcfolder QuantAnalysis.app -ov -format UDZO QuantAnalysis.dmg
+          else
+            echo "Error: QuantAnalysis.app not found"
+            exit 1
+          fi
+          
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: QuantAnalysis-macOS
+          path: dist/QuantAnalysis.dmg
+          
   create-release:
-    needs: [build-macos, build-windows]
+    needs: [build-windows, build-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-      - name: Create GitHub Release
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            macos-build/QuantAnalysis.dmg
-            windows-build/QuantAnalysis-Windows.zip
+            QuantAnalysis-Windows/QuantAnalysis-Windows.zip
+            QuantAnalysis-macOS/QuantAnalysis.dmg
           draft: false
-          prerelease: false
-          fail_on_unmatched_files: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          prerelease: false 
