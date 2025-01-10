@@ -5,14 +5,23 @@ from PyInstaller.__main__ import run
 if __name__ == '__main__':
     sys.setrecursionlimit(sys.getrecursionlimit() * 5)
     
+    # 운영체제별 경로 구분자 설정
+    separator = ';' if sys.platform == 'win32' else ':'
+    
+    # static 디렉토리가 없으면 생성
+    if not os.path.exists('static'):
+        os.makedirs('static')
+    if not os.path.exists('templates'):
+        os.makedirs('templates')
+    
     # 기본 옵션 설정
     opts = [
         'app.py',  # 메인 스크립트
         '--name=QuantAnalysis',  # 실행 파일 이름
         '--onedir',  # 단일 디렉토리로 생성
         '--windowed',  # GUI 모드 (콘솔 창 숨김)
-        '--add-data=templates:templates',  # 템플릿 디렉토리 포함
-        '--add-data=static:static',  # 정적 파일 디렉토리 포함
+        f'--add-data=templates{separator}templates',  # 템플릿 디렉토리 포함
+        f'--add-data=static{separator}static',  # 정적 파일 디렉토리 포함
         '--hidden-import=plotly',
         '--hidden-import=pandas',
         '--hidden-import=numpy',
