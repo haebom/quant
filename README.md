@@ -16,12 +16,12 @@
 ## 설치 방법
 
 ### Windows 사용자
-1. [Releases](https://github.com/yourusername/QuantAnalysis/releases) 페이지에서 최신 버전의 `QuantAnalysis-Setup.exe` 다운로드
+1. [Releases](https://github.com/haebom/Quant/releases) 페이지에서 최신 버전의 `QuantAnalysis-Setup.exe` 다운로드
 2. 다운로드한 설치 파일 실행
 3. 설치 마법사의 안내에 따라 설치 완료
 
 ### macOS 사용자
-1. [Releases](https://github.com/yourusername/QuantAnalysis/releases) 페이지에서 최신 버전의 `QuantAnalysis.dmg` 다운로드
+1. [Releases](https://github.com/haebom/Quant/releases) 페이지에서 최신 버전의 `QuantAnalysis.dmg` 다운로드
 2. DMG 파일을 더블클릭하여 마운트
 3. 애플리케이션을 Applications 폴더로 드래그하여 설치
 
@@ -85,11 +85,11 @@
 
 문제가 발생하거나 도움이 필요한 경우:
 - GitHub Issues를 통해 문의
-- 이메일: support@quantanalysis.com
+- 이메일: haebom@3blocks.ai
 
 ## 업데이트 내역
 
-### v2.0.0 (2024-01)
+### v1.0.3 (2024-01)
 - 데스크톱 애플리케이션 출시
 - 다국어 리포트 기능 추가
 - UI/UX 개선
