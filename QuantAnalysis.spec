@@ -61,3 +61,17 @@ coll = COLLECT(
     upx_exclude=[],
     name='QuantAnalysis'
 )
+
+# Add macOS specific bundle
+app = BUNDLE(
+    coll,
+    name='QuantAnalysis.app',
+    icon='assets/icon.ico',
+    bundle_identifier='com.haebom.quantanalysis',
+    info_plist={
+        'NSHighResolutionCapable': 'True',
+        'LSBackgroundOnly': 'False',
+        'NSRequiresAquaSystemAppearance': 'False',
+        'CFBundleShortVersionString': '1.0.0',
+    }
+)
