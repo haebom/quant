@@ -1,14 +1,22 @@
 #!/bin/bash
 
-# 가상환경 활성화 (필요한 경우)
-# source venv/bin/activate
+# Clean previous builds
+rm -rf build dist
 
-# 필요한 패키지 설치
-pip install -r requirements.txt
+# Build the application
+pyinstaller QuantAnalysis.spec
 
-# PyInstaller를 사용하여 실행 파일 생성
-pyinstaller build_mac.spec
+# Code signing for macOS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Create app bundle
+    mkdir -p "dist/QuantAnalysis.app/Contents/MacOS"
+    cp -r dist/QuantAnalysis/* "dist/QuantAnalysis.app/Contents/MacOS/"
+    
+    # Sign the app bundle with entitlements
+    codesign --force --deep --sign - --entitlements entitlements.plist --options runtime "dist/QuantAnalysis.app"
+    
+    # Verify signing
+    codesign --verify --deep --strict "dist/QuantAnalysis.app"
+fi
 
-# 빌드된 파일 위치 안내
-echo "빌드가 완료되었습니다."
-echo "실행 파일은 dist/CryptoAssistant 디렉토리에 있습니다." 
+echo "Build completed!" 

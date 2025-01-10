@@ -481,4 +481,10 @@ def compare_backtests():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    try:
+        import watchdog
+        debug_mode = True
+    except ImportError:
+        debug_mode = False
+    
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode) 

@@ -66,7 +66,7 @@ if __name__ == '__main__':
         opts.extend([
             f'--target-arch={"arm64" if is_arm else "x86_64"}',
             '--osx-bundle-identifier=com.haebom.quantanalysis',
-            '--codesign-identity=-',  # 자체 서명 사용
+            '--codesign-identity=',  # 빈 문자열로 설정하여 자체 서명 비활성화
             '--runtime-hook=macos_runtime_hook.py',
             '--exclude-module=tkinter',
             '--exclude-module=_tkinter',

@@ -21,6 +21,7 @@ python-dotenv==1.0.0  # 환경 변수 관리
 requests==2.31.0  # HTTP 클라이언트
 websocket-client==1.6.4  # 웹소켓 클라이언트
 pdfkit==1.0.0  # PDF 생성
+watchdog==3.0.0  # 파일 시스템 모니터링
 
 # Build Tools
 pyinstaller==6.3.0  # 실행 파일 생성
