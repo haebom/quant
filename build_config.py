@@ -9,89 +9,78 @@ if __name__ == '__main__':
     # 운영체제별 경로 구분자 설정
     separator = ';' if sys.platform == 'win32' else ':'
     
-    # static 디렉토리가 없으면 생성
-    if not os.path.exists('static'):
-        os.makedirs('static')
-    if not os.path.exists('templates'):
-        os.makedirs('templates')
+    # 기본 디렉토리 생성
+    for dir_name in ['static', 'templates']:
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
     
     # 기본 옵션 설정
     opts = [
-        'app.py',  # 메인 스크립트
-        '--name=QuantAnalysis',  # 실행 파일 이름
-        '--onedir',  # 단일 디렉토리로 생성
-        '--windowed',  # GUI 모드 (콘솔 창 숨김)
-        f'--add-data=templates{separator}templates',  # 템플릿 디렉토리 포함
-        f'--add-data=static{separator}static',  # 정적 파일 디렉토리 포함
-        # Core Dependencies
+        'app.py',
+        '--name=QuantAnalysis',
+        '--onefile',  # 단일 실행 파일로 빌드
+        '--windowed',
+        '--clean',
+        '--noconfirm',
+        
+        # 데이터 파일 추가
+        f'--add-data=templates{separator}templates',
+        f'--add-data=static{separator}static',
+        
+        # 필수 패키지 import
         '--hidden-import=flask',
         '--hidden-import=werkzeug',
-        '--hidden-import=markupsafe',
-        '--collect-all=flask',
-        '--collect-all=werkzeug',
-        # Data Processing & Analysis
+        '--hidden-import=jinja2',
         '--hidden-import=pandas',
         '--hidden-import=numpy',
         '--hidden-import=scipy',
         '--hidden-import=sklearn',
-        '--collect-all=pandas',
-        '--collect-all=numpy',
-        # Technical Analysis
         '--hidden-import=ta',
-        '--collect-all=ta',
-        # Visualization
         '--hidden-import=plotly',
-        '--collect-all=plotly',
-        # Utilities
         '--hidden-import=python_binance',
         '--hidden-import=websocket',
         '--hidden-import=requests',
-        '--hidden-import=dotenv',
+        '--hidden-import=certifi',
+        
+        # 전체 패키지 수집
+        '--collect-all=flask',
+        '--collect-all=werkzeug',
+        '--collect-all=pandas',
+        '--collect-all=numpy',
+        '--collect-all=ta',
+        '--collect-all=plotly',
         '--collect-all=python_binance',
-        # Build options
-        '--clean',  # 빌드 전 캐시 정리
-        '--noconfirm',  # 기존 빌드 디렉토리 자동 삭제
+        
+        # 디버그 옵션
+        '--debug=imports',
+        '--debug=bootloader',
     ]
     
-    # 운영체제별 설정
-    if sys.platform == 'darwin':  # macOS
+    # macOS 특정 설정
+    if sys.platform == 'darwin':
         icon_path = os.path.join('static', 'icon.icns')
         if os.path.exists(icon_path):
             opts.extend(['--icon', icon_path])
-            
-        # Check if running on Apple Silicon
-        is_arm = platform.machine() == 'arm64'
         
+        is_arm = platform.machine() == 'arm64'
         opts.extend([
-            f'--target-arch={"arm64" if is_arm else "x86_64"}',  # 현재 아키텍처에 맞게 설정
-            '--codesign-identity=-',  # 자체 서명 사용
+            f'--target-arch={"arm64" if is_arm else "x86_64"}',
             '--osx-bundle-identifier=com.haebom.quantanalysis',
-            '--debug=imports',
-            '--exclude-module=tkinter',  # 불필요한 모듈 제외
+            '--codesign-identity=-',  # 자체 서명 사용
+            '--runtime-hook=macos_runtime_hook.py',
+            '--exclude-module=tkinter',
             '--exclude-module=_tkinter',
             '--exclude-module=Tkinter',
             '--exclude-module=tcl',
             '--exclude-module=tk',
-            '--copy-metadata=flask',
-            '--copy-metadata=click',
-            '--copy-metadata=werkzeug',
-            '--copy-metadata=jinja2',
-            '--copy-metadata=markupsafe',
-            '--copy-metadata=itsdangerous',
-            '--copy-metadata=plotly',
-            '--copy-metadata=pandas',
-            '--copy-metadata=numpy',
-            '--copy-metadata=scipy',
-            '--copy-metadata=sklearn',
-            '--copy-metadata=ta',
-            '--copy-metadata=python-binance',
-            '--copy-metadata=websocket-client',
-            '--copy-metadata=requests',
-            '--copy-metadata=python-dotenv',
-            '--runtime-hook=macos_runtime_hook.py',
         ])
-            
-    elif sys.platform == 'win32':  # Windows
+        
+        # macOS 특정 환경 변수 설정
+        os.environ['DYLD_LIBRARY_PATH'] = ''
+        os.environ['DYLD_FRAMEWORK_PATH'] = ''
+    
+    # Windows 특정 설정
+    elif sys.platform == 'win32':
         icon_path = os.path.join('static', 'icon.ico')
         if os.path.exists(icon_path):
             opts.extend(['--icon', icon_path])
