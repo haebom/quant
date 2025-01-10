@@ -64,7 +64,7 @@ if __name__ == '__main__':
         
         opts.extend([
             f'--target-arch={"arm64" if is_arm else "x86_64"}',  # 현재 아키텍처에 맞게 설정
-            '--codesign-identity=',  # 자동 코드사이닝
+            '--codesign-identity=-',  # 자체 서명 사용
             '--osx-bundle-identifier=com.haebom.quantanalysis',
             '--debug=imports',
             '--exclude-module=tkinter',  # 불필요한 모듈 제외
@@ -72,13 +72,24 @@ if __name__ == '__main__':
             '--exclude-module=Tkinter',
             '--exclude-module=tcl',
             '--exclude-module=tk',
+            '--copy-metadata=flask',
+            '--copy-metadata=click',
+            '--copy-metadata=werkzeug',
+            '--copy-metadata=jinja2',
+            '--copy-metadata=markupsafe',
+            '--copy-metadata=itsdangerous',
+            '--copy-metadata=plotly',
+            '--copy-metadata=pandas',
+            '--copy-metadata=numpy',
+            '--copy-metadata=scipy',
+            '--copy-metadata=sklearn',
+            '--copy-metadata=ta',
+            '--copy-metadata=python-binance',
+            '--copy-metadata=websocket-client',
+            '--copy-metadata=requests',
+            '--copy-metadata=python-dotenv',
+            '--runtime-hook=macos_runtime_hook.py',
         ])
-        
-        # Add runtime hooks for SSL/Socket only if needed
-        if is_arm:
-            opts.extend([
-                '--runtime-hook=macos_runtime_hook.py',
-            ])
             
     elif sys.platform == 'win32':  # Windows
         icon_path = os.path.join('static', 'icon.ico')
