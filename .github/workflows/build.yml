@@ -24,25 +24,12 @@ jobs:
           
       - name: Build Windows executable
         run: |
-          python build_config.py
-          
-      - name: Debug build output
-        shell: pwsh
-        run: |
-          Get-ChildItem -Path dist -Recurse | ForEach-Object {
-            Write-Output $_.FullName
-          }
+          pyinstaller --clean QuantAnalysis.spec
           
       - name: Create Windows archive
         shell: pwsh
         run: |
-          Set-Location dist
-          if (Test-Path QuantAnalysis.exe) {
-            Compress-Archive -Path QuantAnalysis.exe -DestinationPath ..\QuantAnalysis-Windows.zip -Force
-          } else {
-            Write-Error "Error: QuantAnalysis.exe not found"
-            exit 1
-          }
+          Compress-Archive -Path "dist/QuantAnalysis/*" -DestinationPath "QuantAnalysis-Windows.zip" -Force
           
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v3
@@ -68,17 +55,20 @@ jobs:
           
       - name: Build macOS app
         run: |
-          python build_config.py
+          pyinstaller --clean QuantAnalysis.spec
+          
+      - name: Setup macOS app bundle
+        run: |
+          mkdir -p "dist/QuantAnalysis.app/Contents/"{MacOS,Resources,Frameworks}
+          cp -r dist/QuantAnalysis/* "dist/QuantAnalysis.app/Contents/MacOS/"
+          if [ -f "assets/icon.icns" ]; then
+            cp "assets/icon.icns" "dist/QuantAnalysis.app/Contents/Resources/"
+          fi
           
       - name: Create DMG
         run: |
           cd dist
-          if [ -d "QuantAnalysis.app" ]; then
-            hdiutil create -volname "QuantAnalysis" -srcfolder QuantAnalysis.app -ov -format UDZO QuantAnalysis.dmg
-          else
-            echo "Error: QuantAnalysis.app not found"
-            exit 1
-          fi
+          hdiutil create -volname "QuantAnalysis" -srcfolder QuantAnalysis.app -ov -format UDZO QuantAnalysis.dmg
           
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v3
@@ -92,16 +82,16 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         
       - name: Create Release
         uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
             QuantAnalysis-Windows/QuantAnalysis-Windows.zip
             QuantAnalysis-macOS/QuantAnalysis.dmg
           draft: false
-          prerelease: false 
+          prerelease: false
+          generate_release_notes: true 
